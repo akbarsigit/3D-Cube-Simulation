@@ -2,7 +2,8 @@ import sys, math
 from graphics import *
 from time import sleep
 import numpy as np
-from math import pi ,sin, cos
+from math import atan, pi ,sin, cos, sqrt
+import math
 
 class Point3D:
     def __init__(self, x = 0, y = 0, z = 0):
@@ -61,30 +62,72 @@ class Point3D:
         return Point3D(temp[0],temp[1],temp[2])
 
 #point1 and 2 are lists [x1,y1,z1] [x2,y2,z2]
-    def RotateAtArbitraryAxis(self, point1, point2, angle):
-        angle = angle * math.pi / 180
-        pointToRotate = [self.x,self.y,self.z]
-        u= []
-        squaredSum = 0
-        for i,f in zip(point1, point2):
-            u.append(f-i)
-            squaredSum += (f-i) **2
+    def RotateAtArbitraryAxis(self, angle, point1, point2):
+        xVect = point2[0] - point1[0]
+        yVect = point2[1] - point1[1]
+        zVect = point2[2] - point1[2]
+        beta, miu = 0,0
+        if zVect == 0:
+            if xVect > 0: 
+                beta = 90
+            else:
+                beta = 270
+        else:
+            beta = atan(xVect/ zVect) * 180 / pi
+        if xVect **2 + zVect**2 == 0:
+            if yVect > 0:
+                miu = 90
+            else:
+                miu = 270
+        else:
+            miu = atan(yVect / math.sqrt(xVect **2 + zVect**2)) * 180 / pi
+        x = 0 - point1[0] 
+        y = 0 - point1[1] 
+        z = 0 - point1[2]
+        t1 = np.array([[1,0,0,x],
+                      [0,1,0,y],
+                      [0,0,1,z],
+                      [0,0,0,1]])
+        a = np.sin(-beta)
+        b = np.cos(-beta)
+        rotY1 = np.array([[b,0,a,0],
+                      [0,1,0,0],
+                      [-a,0,b,0],
+                      [0,0,0,1]])
+        a = np.sin(miu)
+        b = np.cos(miu)
+        rotX1 = np.array([[1,0,0,0],
+                      [0,b,-a,0],
+                      [0,a,b,0], 
+                      [0,0,0,1]])
+        a = np.sin(angle)
+        b = np.cos(angle)
+        rotZ = np.array([[b,-a,0,0],
+                      [a,b,0,0],
+                      [0,0,1,0],
+                      [0,0,0,1]])
+        a = np.sin(-miu)
+        b = np.cos(-miu)
+        rotX2 = np.array([[1,0,0,0],
+                      [0,b,-a,0],
+                      [0,a,b,0], 
+                      [0,0,0,1]])
+        a = np.sin(beta)
+        b = np.cos(beta)
+        rotY2 = np.array([[b,0,a,0],
+                      [0,1,0,0],
+                      [-a,0,b,0],
+                      [0,0,0,1]])
+        x = point1[0] - 0
+        y = point1[1] - 0
+        z = point1[2] - 0
+        t2 = np.array([[1,0,0,x],
+                      [0,1,0,y],
+                      [0,0,1,z],
+                      [0,0,0,1]])
 
-        u = [i/squaredSum for i in u]
-        
-        r = [[cos(angle) + u[0]**2 * (1-cos(angle)), 
-             u[0] * u[1] * (1-cos(angle)) - u[2] * sin(angle), 
-             u[0] * u[2] * (1 - cos(angle)) + u[1] * sin(angle)],
-            [u[0] * u[1] * (1-cos(angle)) + u[2] * sin(angle),
-             cos(angle) + u[1]**2 * (1-cos(angle)),
-             u[1] * u[2] * (1 - cos(angle)) - u[0] * sin(angle)],
-            [u[0] * u[2] * (1-cos(angle)) - u[1] * sin(angle),
-             u[1] * u[2] * (1-cos(angle)) + u[0] * sin(angle),
-             cos(angle) + u[2]**2 * (1-cos(angle))]]
+        temp = np.dot(t2,np.dot(rotY2,np.dot(rotX2,np.dot(rotZ,np.dot(rotX1, np.dot(rotY1,np.dot(t1,[self.x,self.y,self.z,1])))))))
 
-        temp = []
-        for i in range(3):
-            temp.append(round(sum([r[j][i] * pointToRotate[j] for j in range(3)])))
         return Point3D(temp[0],temp[1],temp[2])
 
     def project(self, win_width, win_height, fov, viewer_distance):
@@ -114,6 +157,7 @@ class Simulation:
         self.angleX, self.angleY, self.angleZ = 0, 0, 0
         self.posTransX, self.posTransY, self.posTransZ = 0, 0, 0
         self.posScaleX, self.posScaleY, self.posScaleZ = 1, 1, 1
+        self.ArbitratyRotAngle = 0
 
         self.zzyzx=0
         self.l1 = [[],[],[],[],[],[]]
@@ -122,14 +166,12 @@ class Simulation:
         self.l4 = [[],[],[],[],[],[]] 
         
 
-    def transform(self, w, command, angle=10, x=1, y=1, z=1):
-
-        for limit in range(abs(angle)):
-            sleep(0.005)
+    def transform(self, w, command, angle=10, x=1, y=1, z=1, point1=[0,0,0], point2=[0,0,0]):
             
             rotAnimX, rotAnimY, rotAnimZ = 0, 0, 0
             posAnimX, posAnimY, posAnimZ = 0, 0, 0
-            
+            rotAnimArby = 0
+           
             if(command == 'rotX'):
                 if(angle < 0):
                     rotAnimX = -1
@@ -156,6 +198,13 @@ class Simulation:
                 self.posScaleY *= y
                 self.posScaleZ *= z
 
+            elif(command == 'arbitraryRotation'):
+                self.ArbitratyRotAngle = angle
+                # rotAnimArby = 1
+
+        for limit in range(abs(angle)):
+            sleep(0.005)
+            
             #ANMATION
             self.angleX += rotAnimX
             self.angleY += rotAnimY
@@ -165,13 +214,15 @@ class Simulation:
             self.posTransY += posAnimY
             self.posTransZ += posAnimZ
 
+            # self.ArbitratyRotAngle += rotAnimArby
+
             # Will hold transformed vertices.
             t = []
             gx = 0
 
             for v in self.vertices:
-                # Rotate the point around X axis, then around Y axis, and finally around Z axis.
-                r = v.rotateX(self.angleX).rotateY(self.angleY).rotateZ(self.angleZ).translation(self.posTransX, self.posTransY, self.posTransZ).scaling(self.posScaleX, self.posScaleY, self.posScaleZ)
+
+                r = v.rotateX(self.angleX).rotateY(self.angleY).rotateZ(self.angleZ).translation(self.posTransX, self.posTransY, self.posTransZ).scaling(self.posScaleX, self.posScaleY, self.posScaleZ).RotateAtArbitraryAxis(self.ArbitratyRotAngle, point1, point2)
                 
                 # Transform the point from 3D to 2D
                 p = r.project(640, 480, 400, 4)
@@ -208,10 +259,11 @@ class Simulation:
         w=GraphWin("3D Wireframe cube Simulation", 640, 480)
         w.setBackground('black')
         Simulation.transform(self, w, "rotX", angle=30)
-        Simulation.transform(self, w, 'trans', x=3, y=0, z=0)
+        Simulation.transform(self, w, 'trans', x=1, y=0, z=0)
         Simulation.transform(self, w, 'rotY', angle=30)
         Simulation.transform(self, w, 'rotZ', angle=30)
-        Simulation.transform(self, w, 'scale', angle=1, x=2, y=1, z=1)
+        # Simulation.transform(self, w, 'scale', angle=1, x=1.3, y=1, z=1)
+        Simulation.transform(self, w, 'arbitraryRotation', angle=30, point1=[1,1,1], point2=[2,2,2])
         input()
                
 if __name__ == "__main__":
