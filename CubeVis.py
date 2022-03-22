@@ -273,10 +273,11 @@ class Simulation:
                 r = v.rotateX(self.angleX).rotateY(self.angleY).rotateZ(self.angleZ).translation(self.posTransX, self.posTransY, self.posTransZ).scaling(self.posScaleX, self.posScaleY, self.posScaleZ).Shear(self.posShearX, self.posShearY).RotateAtArbitraryAxis(self.ArbitratyRotAngle, point1, point2)
                 
                 # Transformasi titik dari 3 dimensi ke 2 dimensi
-                p = r.project(640, 480, 400, 4)
+                p = r.project(800, 800, 400, 6)
                 # Tambahkan ke daftar titik yang di transformasikan
                 t.append(p)
 
+            #Hapus line setelah ada perubahan posisi
             if(self.zzyzx == 1):
                 for i in range(6):
                     self.l1[i].undraw()
@@ -303,138 +304,104 @@ class Simulation:
                 gx+=1
 
         
-    def run(self, mode, input1):
+    def run(self):
         """ Main Loop """
         w=GraphWin("Transformasi 3 Dimensi Kelompok 17", 800, 800)
         w.setBackground('black')
 
-        if(mode == 2):
-            Simulation.transform(self, w, 'trans', x=float(input1[0]), y=float(input1[1]), z=float(input1[2]))
-        if(mode == 3):
-            Simulation.transform(self, w, 'scale', angle=1,x=float(input1[0]), y=float(input1[1]), z=float(input1[2]))
-        if(mode == 4):
-            Simulation.transform(self,w, 'Shear', Shx = float(input1[0]), Shy =float(input1[1]))
-        if(mode == 5):
-            Simulation.transform(self, w, "rotX", angle=(input1))
-        if(mode == 6):
-            Simulation.transform(self, w, "rotY", angle=(input1))
-        if(mode == 7):
-            Simulation.transform(self, w, "rotZ", angle=(input1))
-        if(mode == 8):
-            point1 = input1[0]
-            point2 = input1[1]
-            angle = int(input1[2])
-            xVect = float(point2[0]) - float(point1[0])
-            yVect = float(point2[1]) - float(point1[1])
-            zVect = float(point2[2]) - float(point1[2])
-            beta, miu = 0,0
-            if zVect == 0:
-                if xVect > 0: 
-                    beta = 90
+
+        msg = """ 
+        Select Command:
+        1. Define Block 
+        2. Translation
+        3. Scale
+        4. Shear
+        5. Rotation on X axis
+        6. Rotation on Y axis
+        7. Rotation on Z axis
+        8. Rotation on Arbitrary axis
+        9. Exit
+        """
+        current_pos =[]
+        #Loop untuk animasi
+        #Pilih command untuk menampilkan transformasi yang diinginkan
+        while True:
+            print(msg)
+            command = int(input("Enter Command: "))
+            if (command == 1):
+                Simulation.Defaultvertices = []
+                for i in range(8):
+                    print("Enter point no ", i+1 , "(example: 1 -1 1):")
+                    temp = input().split()
+                    current_pos.append(Point3D(int(temp[0]),int(temp[1]),int(temp[2])))
+                    Simulation.Defaultvertices = current_pos
+            elif (command == 2):
+                print("Enter the amount of translation on x y z axis (example: 1 -1 1 ) :")
+                input1 = input().split()
+                Simulation.transform(self, w, 'trans', x=float(input1[0]), y=float(input1[1]), z=float(input1[2]))
+            elif (command == 3):
+                print("Enter the scaling factor on x y z axis (example: 1 -1 1 ) :")
+                input1 = input().split()
+                Simulation.transform(self, w, 'scale', angle=1,x=float(input1[0]), y=float(input1[1]), z=float(input1[2]))
+            elif (command == 4):
+                print("Enter the shearing factor on x y axis (example: 1 -1) :")
+                input1 = input().split()
+                Simulation.transform(self,w, 'Shear', Shx = float(input1[0]), Shy =float(input1[1]))
+            elif (command == 5):
+                print("Enter the rotation angle (in degree):")
+                input1 = int(input())
+                Simulation.transform(self, w, "rotX", angle=(input1))
+            elif (command == 6):
+                print("Enter the rotation angle (in degree):")
+                input1 = int(input())
+                Simulation.transform(self, w, "rotY", angle=(input1))
+            elif (command == 7):
+                print("Enter the rotation angle (in degree):")
+                input1 = int(input())
+                Simulation.transform(self, w, "rotZ", angle=(input1))
+            elif (command == 8):
+                print("Enter the x y z value of the first point (example: 1 1 1):")
+                temp1 = input().split()
+                print("Enter the x y z value of the second point (example: 1 1 1):")
+                temp2 = input().split()
+                print("Enter the rotation angle (in degree):")
+                temp3 = input()
+                input1 = [temp1, temp2, temp3]
+
+                point1 = input1[0]
+                point2 = input1[1]
+                angle = int(input1[2])
+                xVect = float(point2[0]) - float(point1[0])
+                yVect = float(point2[1]) - float(point1[1])
+                zVect = float(point2[2]) - float(point1[2])
+                beta, miu = 0,0
+                if zVect == 0:
+                    if xVect > 0: 
+                        beta = 90
+                    else:
+                        beta = 270
                 else:
-                    beta = 270
-            else:
-                beta = atan(xVect/ zVect) * 180 / pi
-            if xVect **2 + zVect**2 == 0:
-                if yVect > 0:
-                    miu = 90
+                    beta = atan(xVect/ zVect) * 180 / pi
+                if xVect **2 + zVect**2 == 0:
+                    if yVect > 0:
+                        miu = 90
+                    else:
+                        miu = 270
                 else:
-                    miu = 270
-            else:
-                miu = atan(yVect / math.sqrt(xVect **2 + zVect**2)) * 180 / pi
-            beta = int(beta)
-            miu = int(miu)
-            Simulation.transform(self, w, 'trans', x=-1*xVect, y=-1*yVect, z=-1*zVect)
-            Simulation.transform(self, w, 'rotY', angle=(beta))
-            Simulation.transform(self, w, 'rotX', angle=(-miu))
-            Simulation.transform(self, w, 'rotZ', angle=(angle))
-            Simulation.transform(self, w, 'rotX', angle=(miu))
-            Simulation.transform(self, w, 'rotY', angle=(-beta))
-            Simulation.transform(self, w, 'trans', x=xVect, y=yVect, z=zVect)
-            #self.translation(-1*xVect, -1*yVect, -1*zVect)
-            #self.rotateY(beta)
-            #self.rotateX(-1*miu)
-            #self.rotateZ(angle)
-            #self.rotateX(miu)
-            #self.rotateY(-1*beta)
-            #self.translation(xVect, yVect, zVect)
-        
-        
-        #Simulation.transform(self,w, 'Shear', Shx = 1, Shy =1)
-        #Simulation.transform(self, w, 'trans', x=-1, y=-1, z=-1)
-        #Simulation.transform(self, w, 'rotY', angle=(-45))
-        #Simulation.transform(self, w, "rotX", angle=(45))
-        #Simulation.transform(self, w, 'rotZ', angle=30)
-        #Simulation.transform(self, w, "rotX", angle=(-45))
-        #Simulation.transform(self, w, 'rotY', angle=(45))
-        #Simulation.transform(self, w, 'trans', x=1, y=1, z=1)
-        #Simulation.transform(self, w, 'scale', angle=1, x=1.3, y=1, z=1)
-        #Simulation.transform(self, w, 'arbitraryRotation', angle=30, point1=[1,1,1], point2=[2,2,2])
-        w.getMouse()
-        w.close()
-        
-               
+                    miu = atan(yVect / math.sqrt(xVect **2 + zVect**2)) * 180 / pi
+                beta = int(beta)
+                miu = int(miu)
+                Simulation.transform(self, w, 'trans', x=-1*xVect, y=-1*yVect, z=-1*zVect)
+                Simulation.transform(self, w, 'rotY', angle=(beta))
+                Simulation.transform(self, w, 'rotX', angle=(-miu))
+                Simulation.transform(self, w, 'rotZ', angle=(angle))
+                Simulation.transform(self, w, 'rotX', angle=(miu))
+                Simulation.transform(self, w, 'rotY', angle=(-beta))
+                Simulation.transform(self, w, 'trans', x=xVect, y=yVect, z=zVect)
+
+            elif (command == 9):
+                sys.exit()
+
+
 if __name__ == "__main__":
-    msg = """ 
-    Select Command:
-    1. Define Block 
-    2. Translation
-    3. Scale
-    4. Shear
-    5. Rotation on X axis
-    6. Rotation on Y axis
-    7. Rotation on Z axis
-    8. Rotation on Arbitrary axis
-    9. Exit
-    """
-    current_pos =[]
-    #Loop untuk animasi
-    #Pilih command untuk menampilkan transformasi yang diinginkan
-    while True:
-        print(msg)
-        command = int(input("Enter Command: "))
-        if (command == 1):
-            Simulation.Defaultvertices = []
-            for i in range(8):
-                print("Enter point no ", i+1 , "(example: 1 -1 1):")
-                temp = input().split()
-                current_pos.append(Point3D(int(temp[0]),int(temp[1]),int(temp[2])))
-                Simulation.Defaultvertices = current_pos
-        elif (command == 2):
-            print("Enter the amount of translation on x y z axis (example: 1 -1 1 ) :")
-            temp = input().split()
-            Simulation().run(mode = 2, input1 = temp)
-        elif (command == 3):
-            print("Enter the scaling factor on x y z axis (example: 1 -1 1 ) :")
-            temp = input().split()
-            Simulation().run(mode = 3, input1 = temp)
-        elif (command == 4):
-            print("Enter the shearing factor on x y axis (example: 1 -1) :")
-            temp = input().split()
-            Simulation().run(mode = 4, input1 = temp)
-        elif (command == 5):
-            print("Enter the rotation angle (in degree):")
-            temp = int(input())
-            Simulation().run(mode = 5, input1 = temp)
-        elif (command == 6):
-            print("Enter the rotation angle (in degree):")
-            temp = int(input())
-            Simulation().run(mode = 6, input1 = temp)
-        elif (command == 7):
-            print("Enter the rotation angle (in degree):")
-            temp = int(input())
-            Simulation().run(mode = 7, input1 = temp)
-        elif (command == 8):
-            print("Enter the x y z value of the first point (example: 1 1 1):")
-            temp1 = input().split()
-            print("Enter the x y z value of the second point (example: 1 1 1):")
-            temp2 = input().split()
-            print("Enter the rotation angle (in degree):")
-            temp3 = input()
-            temp4 = [temp1, temp2, temp3]
-            Simulation().run(mode = 8, input1 = temp4)
-        elif (command == 9):
-            sys.exit()
-
-
-            
+    Simulation().run()
