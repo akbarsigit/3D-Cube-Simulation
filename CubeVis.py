@@ -178,7 +178,7 @@ class Simulation:
             Point3D(2,-1,1),
             Point3D(-2,-1,1)
         ]
-    def __init__(self, win_width = 640, win_height = 480, tvertices = Defaultvertices):
+    def __init__(self, win_width = 800, win_height = 800, tvertices = Defaultvertices):
         self.vertices = tvertices
         
 
@@ -405,3 +405,4 @@ class Simulation:
 
 if __name__ == "__main__":
     Simulation().run()
+
