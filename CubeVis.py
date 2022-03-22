@@ -308,7 +308,7 @@ class Simulation:
         """ Main Loop """
         w=GraphWin("Transformasi 3 Dimensi Kelompok 17", 800, 800)
         w.setBackground('black')
-
+        Simulation.transform(self, w, '', 1)
 
         msg = """ 
         Select Command:
@@ -406,3 +406,5 @@ class Simulation:
 if __name__ == "__main__":
     Simulation().run()
 
+
+            
