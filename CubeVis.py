@@ -1,20 +1,8 @@
-"""" 
-Tugas TVG Kelompok 17
-
-MARSELLIUS              20/456372/TK/50502
-RANGGA AULIA RAHMAN     20/456849/TK/50673
-MUHAMAD THORIQ AHNAF    20/460553/TK/51142
-AKBAR SIGIT PUTRA       20/463590/TK/51582
-RYAN KUSNADI            20/463613/TK/51605
-
-"""
-
-import sys, math
+import sys
 from graphics import *
 from time import sleep
 import numpy as np
 from math import atan, pi ,sin, cos, sqrt
-import math
 
 class Point3D:
     #Inisialisasi untuk titik yang akan digunakan vertices
@@ -88,76 +76,6 @@ class Point3D:
             ])
         temp = np.dot(t,[self.x, self.y, self.z, 1])
         return Point3D(temp[0], temp[1], temp[2])
-
-    #point1 dan 2 adalah lists [x1,y1,z1] [x2,y2,z2]
-    #Rotasi arbitrary
-    def RotateAtArbitraryAxis(self, angle, point1, point2):
-        xVect = point2[0] - point1[0]
-        yVect = point2[1] - point1[1]
-        zVect = point2[2] - point1[2]
-        beta, miu = 0,0
-        if zVect == 0:
-            if xVect > 0: 
-                beta = 90
-            else:
-                beta = 270
-        else:
-            beta = atan(xVect/ zVect) * 180 / pi
-        if xVect **2 + zVect**2 == 0:
-            if yVect > 0:
-                miu = 90
-            else:
-                miu = 270
-        else:
-            miu = atan(yVect / math.sqrt(xVect **2 + zVect**2)) * 180 / pi
-        x = 0 - point1[0] 
-        y = 0 - point1[1] 
-        z = 0 - point1[2]
-        t1 = np.array([[1,0,0,x],
-                      [0,1,0,y],
-                      [0,0,1,z],
-                      [0,0,0,1]])
-        a = np.sin(-beta)
-        b = np.cos(-beta)
-        rotY1 = np.array([[b,0,a,0],
-                      [0,1,0,0],
-                      [-a,0,b,0],
-                      [0,0,0,1]])
-        a = np.sin(miu)
-        b = np.cos(miu)
-        rotX1 = np.array([[1,0,0,0],
-                      [0,b,-a,0],
-                      [0,a,b,0], 
-                      [0,0,0,1]])
-        a = np.sin(angle)
-        b = np.cos(angle)
-        rotZ = np.array([[b,-a,0,0],
-                      [a,b,0,0],
-                      [0,0,1,0],
-                      [0,0,0,1]])
-        a = np.sin(-miu)
-        b = np.cos(-miu)
-        rotX2 = np.array([[1,0,0,0],
-                      [0,b,-a,0],
-                      [0,a,b,0], 
-                      [0,0,0,1]])
-        a = np.sin(beta)
-        b = np.cos(beta)
-        rotY2 = np.array([[b,0,a,0],
-                      [0,1,0,0],
-                      [-a,0,b,0],
-                      [0,0,0,1]])
-        x = point1[0] - 0
-        y = point1[1] - 0
-        z = point1[2] - 0
-        t2 = np.array([[1,0,0,x],
-                      [0,1,0,y],
-                      [0,0,1,z],
-                      [0,0,0,1]])
-
-        temp = np.dot(t2,np.dot(rotY2,np.dot(rotX2,np.dot(rotZ,np.dot(rotX1, np.dot(rotY1,np.dot(t1,[self.x,self.y,self.z,1])))))))
-
-        return Point3D(temp[0],temp[1],temp[2])
     
     #Proyeksi menjadi 3 dimensi
     def project(self, win_width, win_height, fov, viewer_distance):
@@ -178,6 +96,7 @@ class Simulation:
             Point3D(2,-1,1),
             Point3D(-2,-1,1)
         ]
+    posShearX, posShearY = 0,0
     def __init__(self, win_width = 800, win_height = 800, tvertices = Defaultvertices):
         self.vertices = tvertices
         
@@ -202,14 +121,22 @@ class Simulation:
         self.l4 = [[],[],[],[],[],[]] 
         
 
-    def transform(self, w, command, angle=10, x=1, y=1, z=1, point1=[0,0,0], point2=[0,0,0], Shx =0 ,Shy =0):
+    def transform(self, w, command, angle=10, x=1, y=1, z=1, point1=[0,0,0], point2=[0,0,0], Shx =1 ,Shy =1):
+
+        if(command == 'Shear'):
+                if (self.posShearX==0):
+                    self.posShearX += 1
+                if (self.posShearY ==0):
+                    self.posShearY += 1
+                self.posShearX *= Shx
+                self.posShearY *= Shy
 
         for limit in range(abs(angle)):
             sleep(0.005)
             
             rotAnimX, rotAnimY, rotAnimZ = 0, 0, 0
             posAnimX, posAnimY, posAnimZ = 0, 0, 0
-            self.posShearX, self.posShearY = 0,0
+            
 
             rotAnimArby = 0
            
@@ -239,9 +166,7 @@ class Simulation:
                 self.posScaleY *= y
                 self.posScaleZ *= z
             
-            elif(command == 'Shear'):
-                self.posShearX *= Shx
-                self.posShearY *= Shy
+            
 
             #elif(command == 'arbitraryRotation'):
                 #if(angle>0): 
@@ -270,7 +195,7 @@ class Simulation:
 
             for v in self.vertices:
                 #Aplikasikan transformasi ke variabel yang diberikan
-                r = v.rotateX(self.angleX).rotateY(self.angleY).rotateZ(self.angleZ).translation(self.posTransX, self.posTransY, self.posTransZ).scaling(self.posScaleX, self.posScaleY, self.posScaleZ).Shear(self.posShearX, self.posShearY).RotateAtArbitraryAxis(self.ArbitratyRotAngle, point1, point2)
+                r = v.rotateX(self.angleX).rotateY(self.angleY).rotateZ(self.angleZ).translation(self.posTransX, self.posTransY, self.posTransZ).scaling(self.posScaleX, self.posScaleY, self.posScaleZ).Shear(self.posShearX, self.posShearY)
                 
                 # Transformasi titik dari 3 dimensi ke 2 dimensi
                 p = r.project(800, 800, 400, 6)
@@ -335,6 +260,7 @@ class Simulation:
                     temp = input().split()
                     current_pos.append(Point3D(int(temp[0]),int(temp[1]),int(temp[2])))
                     Simulation.Defaultvertices = current_pos
+                    Simulation.transform(self, w, 'trans', x=0, y=0, z=0)
             elif (command == 2):
                 print("Enter the amount of translation on x y z axis (example: 1 -1 1 ) :")
                 input1 = input().split()
@@ -405,6 +331,3 @@ class Simulation:
 
 if __name__ == "__main__":
     Simulation().run()
-
-
-            
